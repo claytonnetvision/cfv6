@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import Layout from '../components/Layout';
 import api from '../services/api';
+import { useAuth } from '../hooks/useAuth.jsx'; // Adicionado
+import RatingSection from '../components/RatingSection'; // Novo Componente
 
 const ProfileContainer = styled.div`
   padding: 40px 5%;
@@ -61,6 +64,8 @@ const Detail = styled.p`
 `;
 
 const Profile = () => {
+  const { id } = useParams(); // Pega o ID da URL se estiver presente
+  const { user: loggedInUser } = useAuth(); // Pega o usuário logado
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
@@ -68,17 +73,18 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [id]); // Refaz o fetch se o ID da URL mudar
 
   const fetchProfile = async () => {
     try {
-      const response = await api.get('/users/profile');
+      const url = id ? `/users/${id}` : '/users/profile';
+      const response = await api.get(url);
       setUser(response.data);
       setFormData(response.data);
     } catch (error) {
       console.error('Erro ao buscar perfil:', error);
-      // Redirecionar para login se não estiver autenticado
-      if (error.response && error.response.status === 401) {
+      // Redirecionar para login se não estiver autenticado E estiver tentando acessar o próprio perfil
+      if (!id && error.response && error.response.status === 401) {
         window.location.href = '/login';
       }
     }
@@ -87,6 +93,9 @@ const Profile = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  // A edição só é permitida se o usuário estiver na sua própria página de perfil (sem ID na URL)
+  const isOwnProfile = !id;
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -128,11 +137,16 @@ const Profile = () => {
 
   if (!user) return <Layout>Carregando perfil...</Layout>;
 
+  // Determina o ID do usuário cujo perfil está sendo visualizado
+  const profileUserId = id ? parseInt(id, 10) : loggedInUser?.id;
+
+  if (!profileUserId) return <Layout>Erro: ID do perfil não encontrado.</Layout>;
+
   return (
     <Layout>
       <ProfileContainer>
         <ProfileCard>
-          <Avatar src={user.foto_perfil ? `http://localhost:3001/${user.foto_perfil}` : '/default-avatar.png'} alt="Avatar" />
+          <Avatar src={user.foto_perfil ? `${api.defaults.baseURL}/${user.foto_perfil}` : '/default-avatar.png'} alt="Avatar" />
           
           <h2>{user.nome}</h2>
           <Detail>Email: {user.email}</Detail>
@@ -140,22 +154,29 @@ const Profile = () => {
           <Detail>Endereço: {user.endereco || 'Não informado'}</Detail>
           <Detail>Membro desde: {new Date(user.data_cadastro).toLocaleDateString()}</Detail>
           
-          <div style={{ marginTop: '20px' }}>
-            <Input type="file" onChange={handleAvatarChange} />
-            <Button onClick={handleAvatarUpload} disabled={!newAvatar}>
-              {newAvatar ? 'Enviar Nova Foto' : 'Selecione uma Foto'}
-            </Button>
-          </div>
-
-          <h3 style={{ marginTop: '30px', color: 'var(--color-primary)' }}>Bio</h3>
-          <p>{user.bio || 'Nenhuma bio informada.'}</p>
-
-          <Button onClick={() => setIsEditing(!isEditing)} style={{ marginTop: '20px' }}>
-            {isEditing ? 'Cancelar Edição' : 'Editar Perfil'}
-          </Button>
+	          {isOwnProfile && (
+	            <div style={{ marginTop: '20px' }}>
+	              <Input type="file" onChange={handleAvatarChange} />
+	              <Button onClick={handleAvatarUpload} disabled={!newAvatar}>
+	                {newAvatar ? 'Enviar Nova Foto' : 'Selecione uma Foto'}
+	              </Button>
+	            </div>
+	          )}
+	
+	          <h3 style={{ marginTop: '30px', color: 'var(--color-primary)' }}>Bio</h3>
+	          <p>{user.bio || 'Nenhuma bio informada.'}</p>
+	
+	          {isOwnProfile && (
+	            <Button onClick={() => setIsEditing(!isEditing)} style={{ marginTop: '20px' }}>
+	              {isEditing ? 'Cancelar Edição' : 'Editar Perfil'}
+	            </Button>
+	          )}
         </ProfileCard>
 
-        {isEditing && (
+	        {/* Seção de Avaliação de Perfil (Votação) */}
+        <RatingSection profileUserId={profileUserId} />
+
+        {isEditing && isOwnProfile && (
           <ProfileCard>
             <h3 style={{ color: 'var(--color-primary)' }}>Editar Informações</h3>
             <form onSubmit={handleUpdate}>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Layout from '../components/Layout';
 import api from '../services/api';
@@ -113,36 +114,58 @@ const CommentSection = styled.div`
   padding-top: 10px;
 `;
 
-const CommentItem = styled.div`
-  background-color: #f9f9f9;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: flex-start;
-
-  img {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 10px;
-  }
-
-  div {
-    flex-grow: 1;
-  }
-
-  strong {
-    font-weight: 600;
-    margin-right: 5px;
-  }
-
-  p {
-    margin: 0;
-    font-size: 0.9em;
-  }
-`;
+	const CommentItem = styled.div`
+	  background-color: #f9f9f9;
+	  padding: 10px;
+	  border-radius: 4px;
+	  margin-bottom: 10px;
+	  display: flex;
+	  align-items: flex-start;
+	
+	  img {
+	    width: 30px;
+	    height: 30px;
+	    border-radius: 50%;
+	    object-fit: cover;
+	    margin-right: 10px;
+	  }
+	
+	  .comment-content {
+	    flex-grow: 1;
+	  }
+	
+	  .comment-header {
+	    display: flex;
+	    justify-content: space-between;
+	    align-items: center;
+	    margin-bottom: 5px;
+	  }
+	
+	  strong {
+	    font-weight: 600;
+	    margin-right: 5px;
+	    font-size: 0.9em;
+	  }
+	
+	  span {
+	    color: #999;
+	    font-size: 0.7em;
+	  }
+	
+	  p {
+	    margin: 0;
+	    font-size: 0.9em;
+	  }
+	
+	  button {
+	    background: none;
+	    border: none;
+	    color: red;
+	    cursor: pointer;
+	    font-size: 0.8em;
+	    margin-left: 10px;
+	  }
+	`;
 
 const CommentForm = styled.form`
   display: flex;
@@ -162,32 +185,48 @@ const CommentForm = styled.form`
 `;
 
 const Community = () => {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostPhoto, setNewPostPhoto] = useState(null);
-  const [comments, setComments] = useState({});
-  const [showComments, setShowComments] = useState({});
-
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
-    try {
-      const response = await api.get('/posts');
-      setPosts(response.data.map(post => ({
-        ...post,
-        like_count: parseInt(post.like_count, 10),
-        comment_count: parseInt(post.comment_count, 10),
-      })));
-    } catch (error) {
-      console.error('Erro ao buscar posts:', error);
-    }
-  };
+	  const [comments, setComments] = useState({});
+	  const [showComments, setShowComments] = useState({});
+	
+	  useEffect(() => {
+	    // Tenta obter o usuário logado do localStorage
+	    const storedUser = localStorage.getItem('user');
+	    if (storedUser) {
+	      setCurrentUser(JSON.parse(storedUser));
+	    }
+	    fetchPosts();
+	  }, []);
+	
+	  const fetchPosts = async () => {
+	    try {
+	      const response = await api.get('/posts');
+	      setPosts(response.data.map(post => ({
+	        ...post,
+	        like_count: parseInt(post.like_count, 10),
+	        comment_count: parseInt(post.comment_count, 10),
+	        // user_liked já vem como boolean do backend, mas garante a coerção se necessário
+	        user_liked: post.user_liked === true || post.user_liked === 'true', 
+	      })));
+	    } catch (error) {
+	      console.error('Erro ao buscar posts:', error);
+	    }
+	  };
 
   const handlePostSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
+    
+    // Adicionar validação básica no frontend
+    if (!newPostContent && !newPostPhoto) {
+        alert('O post deve ter conteúdo ou uma foto.');
+        return;
+    }
+
     formData.append('conteudo', newPostContent);
     if (newPostPhoto) {
       formData.append('foto_post', newPostPhoto);
@@ -203,19 +242,23 @@ const Community = () => {
       setNewPostContent('');
       setNewPostPhoto(null);
     } catch (error) {
-      alert('Erro ao criar post. Verifique se está logado.');
+      alert(`Erro ao criar post: ${error.response?.data?.message || 'Verifique se está logado.'}`);
     }
   };
 
-  const handleLike = async (postId) => {
-    try {
-      const response = await api.post(`/likes/${postId}/toggle`);
-      // Atualiza o post específico na lista
-      setPosts(posts.map(p => p.id === postId ? { ...p, like_count: response.data.likeCount } : p));
-    } catch (error) {
-      alert('Erro ao registrar like. Verifique se está logado.');
-    }
-  };
+	  const handleLike = async (postId) => {
+	    try {
+	      const response = await api.post(`/likes/${postId}/toggle`);
+	      // Atualiza o post específico na lista, alternando o estado de like
+	      setPosts(posts.map(p => p.id === postId ? { 
+	        ...p, 
+	        like_count: parseInt(response.data.likeCount, 10),
+	        user_liked: response.data.action === 'liked' // Assume que o backend retorna a ação
+	      } : p));
+	    } catch (error) {
+	      alert('Erro ao registrar like. Verifique se está logado.');
+	    }
+	  };
 
   const fetchComments = async (postId) => {
     try {
@@ -233,23 +276,48 @@ const Community = () => {
     setShowComments(prev => ({ ...prev, [postId]: !prev[postId] }));
   };
 
-  const handleCommentSubmit = async (e, postId) => {
-    e.preventDefault();
-    const input = e.target.elements.comment;
-    const conteudo = input.value;
-    if (!conteudo) return;
-
-    try {
-      await api.post(`/comments/${postId}`, { conteudo });
-      fetchComments(postId); // Recarrega os comentários
-      fetchPosts(); // Recarrega os posts para atualizar a contagem de comentários
-      input.value = '';
-    } catch (error) {
-      alert('Erro ao comentar. Verifique se está logado.');
+  const handleDeletePost = async (postId) => {
+    if (window.confirm('Tem certeza que deseja excluir esta postagem?')) {
+      try {
+        await api.delete(`/posts/${postId}`);
+        setPosts(posts.filter(p => p.id !== postId));
+        alert('Postagem excluída com sucesso!');
+      } catch (error) {
+        alert(`Erro ao excluir post: ${error.response?.data?.message || 'Você não tem permissão para excluir esta postagem.'}`);
+      }
     }
   };
 
-  return (
+	  const handleDeleteComment = async (commentId, postId) => {
+	    if (window.confirm('Tem certeza que deseja excluir este comentário?')) {
+	      try {
+	        await api.delete(`/comments/${commentId}`);
+	        fetchComments(postId); // Recarrega os comentários
+	        fetchPosts(); // Recarrega os posts para atualizar a contagem de comentários
+	        alert('Comentário excluído com sucesso!');
+	      } catch (error) {
+	        alert(`Erro ao excluir comentário: ${error.response?.data?.message || 'Você não tem permissão para excluir este comentário.'}`);
+	      }
+	    }
+	  };
+	
+	  const handleCommentSubmit = async (e, postId) => {
+	    e.preventDefault();
+	    const input = e.target.elements.comment;
+	    const conteudo = input.value;
+	    if (!conteudo) return;
+	
+	    try {
+	      await api.post(`/comments/${postId}`, { conteudo });
+	      fetchComments(postId); // Recarrega os comentários
+	      fetchPosts(); // Recarrega os posts para atualizar a contagem de comentários
+	      input.value = '';
+	    } catch (error) {
+	      alert('Erro ao comentar. Verifique se está logado.');
+	    }
+	  };
+	
+	  return (
     <Layout>
       <CommunityContainer>
         <Title>Comunidade CFV6 BOX</Title>
@@ -270,32 +338,46 @@ const Community = () => {
           {posts.map(post => (
             <PostCard key={post.id}>
               <PostHeader>
-                <img src={post.user_foto_perfil ? `http://localhost:3001/${post.user_foto_perfil}` : '/default-avatar.png'} alt="Avatar" />
+                <img src={post.user_foto_perfil ? `${api.defaults.baseURL}/${post.user_foto_perfil}` : '/default-avatar.png'} alt="Avatar" />
                 <div>
-                  <h3>{post.user_nome}</h3>
+                  <h3 onClick={() => navigate(`/profile/${post.user_id}`)} style={{ cursor: 'pointer', color: 'var(--color-primary)' }}>{post.user_nome}</h3>
                   <span>{new Date(post.data_postagem).toLocaleString()}</span>
                 </div>
               </PostHeader>
               <PostBody>
                 <p>{post.conteudo}</p>
-                {post.foto_url && <img src={`http://localhost:3001/${post.foto_url}`} alt="Post" />}
+                {post.foto_url && <img src={`${api.defaults.baseURL}/${post.foto_url}`} alt="Post" />}
               </PostBody>
-              <PostActions>
-                <button onClick={() => handleLike(post.id)}>👍 {post.like_count}</button>
-                <button onClick={() => toggleComments(post.id)}>💬 {post.comment_count}</button>
-              </PostActions>
+	              <PostActions>
+	                <button 
+	                  onClick={() => handleLike(post.id)}
+	                  style={{ color: post.user_liked ? 'var(--color-primary)' : 'var(--color-text)' }}
+	                >
+	                  {post.user_liked ? '❤️' : '👍'} {post.like_count}
+	                </button>
+	                <button onClick={() => toggleComments(post.id)}>💬 {post.comment_count}</button>
+	                {(currentUser && (currentUser.id === post.user_id || currentUser.is_admin)) && (
+	                    <button onClick={() => handleDeletePost(post.id)} style={{ color: 'red' }}>🗑️ Apagar</button>
+	                )}
+	              </PostActions>
 
               {showComments[post.id] && (
                 <CommentSection>
-                  {comments[post.id] && comments[post.id].map(comment => (
-                    <CommentItem key={comment.id}>
-                      <img src={comment.foto_perfil ? `http://localhost:3001/${comment.foto_perfil}` : '/default-avatar.png'} alt="Avatar" />
-                      <div>
-                        <strong>{comment.nome}</strong>
-                        <p>{comment.conteudo}</p>
-                      </div>
-                    </CommentItem>
-                  ))}
+	                  {comments[post.id] && comments[post.id].map(comment => (
+	                    <CommentItem key={comment.id}>
+	                      <img src={comment.foto_perfil ? `${api.defaults.baseURL}/${comment.foto_perfil}` : '/default-avatar.png'} alt="Avatar" />
+	                      <div className="comment-content">
+	                        <div className="comment-header">
+	                          <strong>{comment.nome}</strong>
+	                          <span>{new Date(comment.data_comentario).toLocaleString()}</span>
+	                        </div>
+	                        <p>{comment.conteudo}</p>
+	                      </div>
+	                      {(currentUser && (currentUser.id === comment.user_id || currentUser.is_admin)) && (
+	                        <button onClick={() => handleDeleteComment(comment.id, post.id)}>🗑️</button>
+	                      )}
+	                    </CommentItem>
+	                  ))}
                   <CommentForm onSubmit={(e) => handleCommentSubmit(e, post.id)}>
                     <input type="text" name="comment" placeholder="Escreva um comentário..." />
                     <button type="submit">Comentar</button>
