@@ -52,34 +52,48 @@ const PostCard = styled.div`
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 `;
 
-const PostHeader = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-
-  img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 15px;
-  }
-
-  div {
-    display: flex;
-    flex-direction: column;
-  }
-
-  h3 {
-    margin: 0;
-    font-size: 1.2em;
-  }
-
-  span {
-    color: #666;
-    font-size: 0.9em;
-  }
-`;
+	const PostHeader = styled.div`
+	  display: flex;
+	  align-items: center;
+	  margin-bottom: 15px;
+	
+	  img {
+	    width: 40px; /* Reduzir em mobile */
+	    height: 40px; /* Reduzir em mobile */
+	    border-radius: 50%;
+	    object-fit: cover;
+	    margin-right: 10px; /* Reduzir margem */
+	  }
+	
+	  div {
+	    display: flex;
+	    flex-direction: column;
+	  }
+	
+	  h3 {
+	    margin: 0;
+	    font-size: 1em; /* Reduzir fonte em mobile */
+	  }
+	
+	  span {
+	    color: #666;
+	    font-size: 0.8em; /* Reduzir fonte em mobile */
+	  }
+	
+	  @media (min-width: 768px) {
+	    img {
+	      width: 50px;
+	      height: 50px;
+	      margin-right: 15px;
+	    }
+	    h3 {
+	      font-size: 1.2em;
+	    }
+	    span {
+	      font-size: 0.9em;
+	    }
+	  }
+	`;
 
 const PostBody = styled.div`
   img {
@@ -89,24 +103,35 @@ const PostBody = styled.div`
   }
 `;
 
-const PostActions = styled.div`
-  display: flex;
-  gap: 20px;
-  margin-top: 15px;
-  border-top: 1px solid #eee;
-  padding-top: 10px;
-
-  button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 1em;
-    color: var(--color-text);
-  }
-`;
+	const PostActions = styled.div`
+	  display: flex;
+	  gap: 10px; /* Reduzir o gap em mobile */
+	  margin-top: 15px;
+	  border-top: 1px solid #eee;
+	  padding-top: 10px;
+	
+	  @media (max-width: 480px) {
+	    justify-content: space-around; /* Distribuir melhor os botões */
+	  }
+	
+	  button {
+	    background-color: transparent;
+	    border: none;
+	    cursor: pointer;
+	    display: flex;
+	    align-items: center;
+	    gap: 5px;
+	    font-size: 0.9em; /* Reduzir fonte em mobile */
+	    color: var(--color-text);
+	  }
+	
+	  @media (min-width: 768px) {
+	    gap: 20px;
+	    button {
+	      font-size: 1em;
+	    }
+	  }
+	`;
 
 const CommentSection = styled.div`
   margin-top: 20px;
@@ -167,22 +192,24 @@ const CommentSection = styled.div`
 	  }
 	`;
 
-const CommentForm = styled.form`
-  display: flex;
-  margin-top: 10px;
-
-  input {
-    flex-grow: 1;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px 0 0 4px;
-  }
-
-  button {
-    padding: 8px 15px;
-    border-radius: 0 4px 4px 0;
-  }
-`;
+	const CommentForm = styled.form`
+	  display: flex;
+	  margin-top: 10px;
+	
+	  input {
+	    flex-grow: 1;
+	    padding: 8px;
+	    border: 1px solid #ccc;
+	    border-radius: 4px 0 0 4px;
+	    font-size: 0.9em; /* Reduzir fonte em mobile */
+	  }
+	
+	  button {
+	    padding: 8px 10px; /* Reduzir padding em mobile */
+	    border-radius: 0 4px 4px 0;
+	    font-size: 0.9em; /* Reduzir fonte em mobile */
+	  }
+	`;
 
 const Community = () => {
   const navigate = useNavigate();

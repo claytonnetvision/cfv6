@@ -4,13 +4,18 @@ import Layout from '../components/Layout';
 
 const HeroSection = styled.section`
   background: url('/hero-bg.jpg') no-repeat center center/cover;
-  height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--color-white);
-  position: relative;
+	  height: 60vh;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  text-align: center;
+	  color: var(--color-white);
+	  position: relative;
+	
+	  @media (max-width: 768px) {
+	    height: 50vh;
+	    padding: 20px;
+	  }
 
   &::before {
     content: '';
@@ -27,22 +32,35 @@ const HeroSection = styled.section`
     z-index: 1;
   }
 
-  h1 {
-    font-size: 3.5em;
-    margin-bottom: 10px;
-    color: var(--color-primary);
-  }
-
-  p {
-    font-size: 1.5em;
-    margin-bottom: 30px;
-  }
-
-  a {
-    background-color: var(--color-primary);
-    color: var(--color-white);
-    font-size: 1.2em;
-    padding: 15px 30px;
+	  h1 {
+	    font-size: 3.5em;
+	    margin-bottom: 10px;
+	    color: var(--color-primary);
+	
+	    @media (max-width: 768px) {
+	      font-size: 2.5em;
+	    }
+	  }
+	
+	  p {
+	    font-size: 1.5em;
+	    margin-bottom: 30px;
+	
+	    @media (max-width: 768px) {
+	      font-size: 1.2em;
+	    }
+	  }
+	
+	  a {
+	    background-color: var(--color-primary);
+	    color: var(--color-white);
+	    font-size: 1.2em;
+	    padding: 15px 30px;
+	
+	    @media (max-width: 768px) {
+	      font-size: 1em;
+	      padding: 10px 20px;
+	    }
     border-radius: 5px;
     display: inline-block;
 
@@ -63,12 +81,16 @@ const Section = styled.section`
   }
 `;
 
-const TrainingGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
-  margin-top: 30px;
-`;
+	const TrainingGrid = styled.div`
+	  display: grid;
+	  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Reduzir minmax para mobile */
+	  gap: 30px;
+	  margin-top: 30px;
+	
+	  @media (max-width: 480px) {
+	    grid-template-columns: 1fr; /* Uma coluna em telas muito pequenas */
+	  }
+	`;
 
 const WHATSAPP_NUMBER = '31997209998';
 const WHATSAPP_LINK = `https://api.whatsapp.com/send?phone=55${WHATSAPP_NUMBER}&text=Ol%C3%A1%2C%20gostaria%20de%20agendar%20uma%20aula%20experimental!`;
