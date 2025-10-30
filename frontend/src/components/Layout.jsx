@@ -6,17 +6,26 @@ import styled from 'styled-components';
 const Header = styled.header`
   background-color: var(--color-secondary);
   color: var(--color-white);
-  padding: 15px 5%;
+	  padding: 15px 5%;
+	
+	  @media (max-width: 768px) {
+	    padding: 15px 20px; /* Usar padding fixo em mobile */
+	  }
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
-const Logo = styled(Link)`
+	const Logo = styled(Link)`
 	  font-size: 1.8em;
 	  font-weight: 700;
 	  color: var(--color-primary);
+	  white-space: nowrap; /* Evitar quebra de linha do logo */
+	
+	  @media (max-width: 768px) {
+	    font-size: 1.5em; /* Reduzir o tamanho da fonte do logo em mobile */
+	  }
 	`;
 	
 	const MenuToggle = styled.button`

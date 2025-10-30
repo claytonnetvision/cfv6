@@ -17,12 +17,13 @@ const GlobalStyle = createGlobalStyle`
     box-sizing: border-box;
   }
 
-  body {
-    font-family: 'Montserrat', sans-serif;
-    background-color: var(--color-background);
-    color: var(--color-text);
-    line-height: 1.6;
-  }
+	  body {
+	    font-family: 'Montserrat', sans-serif;
+	    background-color: var(--color-background);
+	    color: var(--color-text);
+	    line-height: 1.6;
+	    overflow-x: hidden; /* Adicionado para prevenir o transbordamento horizontal */
+	  }
 
   h1, h2, h3, h4, h5, h6 {
     color: var(--color-secondary);
